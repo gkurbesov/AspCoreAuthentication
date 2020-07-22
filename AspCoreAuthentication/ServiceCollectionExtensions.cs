@@ -1,4 +1,5 @@
 ﻿using AspCoreAuthentication.Basic;
+using AspCoreAuthentication.Bearer;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -22,12 +23,12 @@ namespace AspCoreAuthentication
         public static void AddBearerAuthentication<TOptions>(this IServiceCollection services) where TOptions : AuthenticationSchemeOptions, new()
         {
             services.AddAuthentication("Bearer")
-                .AddScheme<TOptions, BasicAuthenticationHandler<TOptions>>("Bearer", null);
+                .AddScheme<TOptions, BearerAuthenticationHandler<TOptions>>("Bearer", null);
         }
         public static void AddBearerAuthentication(this IServiceCollection services)
         {
             services.AddAuthentication("Bearer")
-                .AddScheme<BasicAuthenticationOptions, BasicAuthenticationHandler<BasicAuthenticationOptions>>("Bearer", null);
+                .AddScheme<BearerAuthenticationOptions, BearerAuthenticationHandler<BearerAuthenticationOptions>>("Bearer", null);
         }
     }
 }
