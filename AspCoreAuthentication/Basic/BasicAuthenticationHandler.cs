@@ -31,7 +31,7 @@ namespace AspCoreAuthentication.Basic
             if (Request.Headers.ContainsKey("Authorization"))
             {
                 string authorization = Request.Headers["Authorization"];
-                if (string.IsNullOrWhiteSpace(authorization))
+                if (!string.IsNullOrWhiteSpace(authorization))
                 {
                     if (authorization.StartsWith("basic", StringComparison.OrdinalIgnoreCase))
                     {
@@ -78,16 +78,15 @@ namespace AspCoreAuthentication.Basic
 
                 if (result)
                 {
-                    var claims = new List<Claim>() { new Claim(ClaimTypes.Name, data[0]), };
-                    var identity = new ClaimsIdentity(claims, Scheme.Name);
-                    var principal = new System.Security.Principal.GenericPrincipal(identity, null);
-                    var ticket = new AuthenticationTicket(principal, Scheme.Name);
-                    return AuthenticateResult.Success(ticket);
+                    var identity = await AuthManager.CreateIdentity(data[0], data[1], Scheme.Name);
+                    if (identity != null)
+                    {
+                        var principal = new ClaimsPrincipal(identity);
+                        var ticket = new AuthenticationTicket(principal, Scheme.Name);
+                        return AuthenticateResult.Success(ticket);
+                    }
                 }
-                else
-                {
-                    return AuthenticateResult.Fail("Unauthorized");
-                }
+                return AuthenticateResult.Fail("Unauthorized");
             }
             else
             {

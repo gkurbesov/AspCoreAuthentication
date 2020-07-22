@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -29,7 +30,7 @@ namespace AspCoreAuthentication.Bearer
             if (Request.Headers.ContainsKey("Authorization"))
             {
                 string authorization = Request.Headers["Authorization"];
-                if (string.IsNullOrWhiteSpace(authorization))
+                if (!string.IsNullOrWhiteSpace(authorization))
                 {
                     if (authorization.StartsWith("bearer", StringComparison.OrdinalIgnoreCase))
                     {
@@ -74,16 +75,15 @@ namespace AspCoreAuthentication.Bearer
                 var result = await AuthManager.ValidateToken(token);
                 if (result)
                 {
-                    var claims = new List<Claim>() { new Claim(ClaimTypes.Name, token), };
-                    var identity = new ClaimsIdentity(claims, Scheme.Name);
-                    var principal = new System.Security.Principal.GenericPrincipal(identity, null);
-                    var ticket = new AuthenticationTicket(principal, Scheme.Name);
-                    return AuthenticateResult.Success(ticket);
+                    var identity = await AuthManager.CreateIdentity(token, Scheme.Name);
+                    if (identity != null)
+                    {
+                        var principal = new ClaimsPrincipal(identity);
+                        var ticket = new AuthenticationTicket(principal, Scheme.Name);
+                        return AuthenticateResult.Success(ticket);
+                    }
                 }
-                else
-                {
-                    return AuthenticateResult.Fail("Unauthorized");
-                }
+                return AuthenticateResult.Fail("Unauthorized");
             }
             else
             {
